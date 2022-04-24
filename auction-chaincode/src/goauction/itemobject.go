@@ -22,7 +22,7 @@ func recordItemObject(stub shim.ChaincodeStubInterface, args []string) cycoreuti
 	var collectionName string
 	var Avalbytes []byte
 	var ItemObject = &itemobject{}
-	var NftObject = &nftobject{}
+	var nftObject = &NftObject{}
 
 	// Convert the arg to a recordItemObject object
 	logger.Info("recordItemObject() : Arguments for recordItemObject : ", args[0])
@@ -32,7 +32,7 @@ func recordItemObject(stub shim.ChaincodeStubInterface, args []string) cycoreuti
 	}
 
 	// Convert the arg to a nft object
-	err = cycoreutils.JSONtoObject([]byte(args[1]), NftObject)
+	err = cycoreutils.JSONtoObject([]byte(args[1]), nftObject)
 	if err != nil {
 		return cycoreutils.ConstructResponse("SASTCONV002E", (errors.Wrapf(err, "Failed to convert arg[1] to NFT object")).Error(), nil)
 	}
@@ -72,12 +72,12 @@ func recordItemObject(stub shim.ChaincodeStubInterface, args []string) cycoreuti
 	// Each item object could have one or more NFTs associated with it
 	copies, _ := strconv.Atoi(ItemObject.NumberOfCopies)
 	for i := 1; i <= copies; i++ {
-		NftObject.ItemCpyNum = strconv.Itoa(i)
-		NftObject.NftId = createNftId(NftObject.ItemCpyNum, ItemObject.ItemID)
+		nftObject.itemCpyNum = strconv.Itoa(i)
+		nftObject.nftId = createNftId(nftObject.itemCpyNum, ItemObject.ItemID)
 
-		NftObjectBytes, _ := cycoreutils.ObjecttoJSON(NftObject)
+		nftObjectBytes, _ := cycoreutils.ObjecttoJSON(nftObject)
 		bargs := make([]string, 1)
-		bargs[0] = string(NftObjectBytes)
+		bargs[0] = string(nftObjectBytes)
 
 		// Mint NFTs
 		recordNftObject(stub, bargs)
