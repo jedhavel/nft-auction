@@ -116,16 +116,16 @@ func createAuctionRequest(stub shim.ChaincodeStubInterface, args []string) cycor
 		return cycoreutils.ConstructResponse("SASTCONV002E", fmt.Sprintf("Auction NFT does not exist"), nil)
 	}
 
-	NftObject := &nftobject{}
-	err = cycoreutils.JSONtoObject(NftBytes, NftObject)
+	nftObject := &NftObject{}
+	err = cycoreutils.JSONtoObject(NftBytes, nftObject)
 	if err != nil {
 		return cycoreutils.ConstructResponse("SASTCONV002E", (errors.Wrapf(err, "Auction Request object unmarshalling failed")).Error(), nil)
 	}
 
-	NftObject.NftStatus = READYFORAUC
+	nftObject.nftStatus = READYFORAUC
 
 	// Check if Item exists
-	Avalbytes, err := cycoreutils.QueryObject(stub, ARTINV, []string{NftObject.ItemID}, collectionName)
+	Avalbytes, err := cycoreutils.QueryObject(stub, ARTINV, []string{nftObject.itemId}, collectionName)
 	if err != nil {
 		cycoreutils.ConstructResponse("SASTQRY003E", (errors.Wrapf(err, "Failed to query Item object")).Error(), nil)
 	}
@@ -139,7 +139,7 @@ func createAuctionRequest(stub shim.ChaincodeStubInterface, args []string) cycor
 		return cycoreutils.ConstructResponse("SASTCONV002E", (errors.Wrapf(err, "Auction Request object unmarshalling failed")).Error(), nil)
 	}
 
-	AuctionRequest.ItemImage = NftObject.ItemImage
+	AuctionRequest.ItemImage = nftObject.itemImage
 	AuctionRequest.ItemImageName = Item.ItemImageName
 	// Check if nft is already on auction
 	isNftOnAuction, err := verifyIfNftIsOnAuction(stub, AuctionRequest.NftId)
@@ -171,7 +171,7 @@ func createAuctionRequest(stub shim.ChaincodeStubInterface, args []string) cycor
 	// TODO - Add validation to check if the Auction House user is of type Auction House(AH)
 
 	// Check if item ownership is valid.
-	err = validateNFTOwnership(stub, AuctionRequest.NftId, AuctionRequest.SellerID, AuctionRequest.AESKey)
+	sellerIndex, err := validateNftOwnership(stub, AuctionRequest.NftId, AuctionRequest.SellerID, AuctionRequest.AESKey)
 	if err != nil {
 		return cycoreutils.ConstructResponse("SASTQRY003E", (errors.Wrapf(err, "Operation Failed")).Error(), nil)
 	}
@@ -188,11 +188,11 @@ func createAuctionRequest(stub shim.ChaincodeStubInterface, args []string) cycor
 		return cycoreutils.ConstructResponse("SASTUPD009E", (errors.Wrapf(err, "Failed to create AuctionRequest")).Error(), nil)
 	}
 
-	NftBytes, err = cycoreutils.ObjecttoJSON(NftObject)
+	NftBytes, err = cycoreutils.ObjecttoJSON(nftObject)
 	if err != nil {
 		return cycoreutils.ConstructResponse("SASTCONV002E", (errors.Wrapf(err, "Auction NFT object marshalling failed")).Error(), nil)
 	}
-	err = cycoreutils.UpdateObject(stub, NFT, []string{NftObject.NftId}, NftBytes, collectionName)
+	err = cycoreutils.UpdateObject(stub, NFT, []string{nftObject.nftId}, NftBytes, collectionName)
 	if err != nil {
 		return cycoreutils.ConstructResponse("SASTUPD009E", (errors.Wrapf(err, "Unable to update Auction NFT Status as 'Ready for Auction")).Error(), nil)
 	}
@@ -344,8 +344,8 @@ func closeAuction(stub shim.ChaincodeStubInterface, args []string) cycoreutils.R
 		TransferNft := TransferNft{}
 		TransferNft.NftId = AuctionRequest.NftId
 		TransferNft.ItemImage = AuctionRequest.ItemImage
-		TransferNft.OwnerAESKey = AuctionRequest.AESKey
-		TransferNft.OwnerID = AuctionRequest.SellerID
+		TransferNft.SenderAESKey = AuctionRequest.AESKey
+		TransferNft.SenderID = AuctionRequest.SellerID
 		TransferNft.Transferee = highestBid.BuyerID
 		TransferNft.ItemPrice = highestBid.BidPrice
 		// Convert TransferNft to JSON
