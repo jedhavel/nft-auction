@@ -211,7 +211,7 @@ func functionCheckAccess(stub shim.ChaincodeStubInterface, functionName string) 
 
 	keys, err := RoleToJSON(keyRole)
 
-	logger.Infof("Keys for functionCheckAccess : ", keys)
+	logger.Infof("Keys for functionCheckAccess : ${keys}")
 
 	f := "queryFunctionAccessCheck"
 

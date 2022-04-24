@@ -107,7 +107,7 @@ func postBid(stub shim.ChaincodeStubInterface, args []string) cycoreutils.Respon
 // getBidsByAuctionID - Get all the bids for an Auction Item
 // ================================================================================
 func getBidsByAuctionID(stub shim.ChaincodeStubInterface, args []string) cycoreutils.Response {
-	logger.Info("Arguments for getAuctionItemsByUser : %s", args[0])
+	logger.Info("Arguments for getAuctionItemsByUser : ${args[0]}")
 	queryString := fmt.Sprintf("{\"selector\":{\"docType\":\"%s\",\"auctionID\":\"%s\"}}", BID, args[0])
 	bidsList, err := getBidsList(stub, queryString)
 	if err != nil {
@@ -248,10 +248,10 @@ func buyItNow(stub shim.ChaincodeStubInterface, args []string) cycoreutils.Respo
 
 	TransferNft := TransferNft{}
 	TransferNft.NftId = AuctionRequest.NftId
-	TransferNft.ItemImage = AuctionRequest.ItemImage
-	TransferNft.OwnerAESKey = AuctionRequest.AESKey
-	TransferNft.OwnerID = AuctionRequest.SellerID
-	TransferNft.Transferee = currentBid.BuyerID
+	TransferNft.itemImage = AuctionRequest.itemImage
+	TransferNft.SenderAESKey = AuctionRequest.AESKey
+	TransferNft.sender = AuctionRequest.SellerID
+	TransferNft.receiver = currentBid.BuyerID
 	TransferNft.ItemPrice = AuctionRequest.BuyItNowPrice
 
 	// Convert TransferNft to JSON
@@ -271,7 +271,7 @@ func buyItNow(stub shim.ChaincodeStubInterface, args []string) cycoreutils.Respo
 // getBidByID - Get Bid Details by Bid ID
 // ======================================================================================
 func getBidByID(stub shim.ChaincodeStubInterface, args []string) cycoreutils.Response {
-	logger.Debug("Arguments for getBidByID : %s", args[0])
+	logger.Debug("Arguments for getBidByID : ${args[0]}")
 
 	collectionName := ""
 
@@ -318,7 +318,7 @@ func tCompare(t1 string, t2 string) bool {
 // Result set is built and returned as a byte array containing the JSON results.
 // ================================================================================
 func getBidsList(stub shim.ChaincodeStubInterface, queryString string) ([]Bid, error) {
-	logger.Debug("getBidsList() queryString: %s\n", queryString)
+	logger.Debug("getBidsList() queryString: ${queryString}\n")
 
 	resultsIterator, err := stub.GetQueryResult(queryString)
 	if err != nil {

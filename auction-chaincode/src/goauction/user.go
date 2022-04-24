@@ -20,10 +20,10 @@ import (
 // createUser - creates a new User, store into chaincode state
 // ================================================================================
 func createUser(stub shim.ChaincodeStubInterface, args []string) cycoreutils.Response {
-	logger.Info("Arguments for User : %s", args[0])
+	logger.Info("Arguments for User : ${args[0]}")
 
 	if len(args) != 1 {
-		logger.Debugf("Incorrect number of arguments. Expecting 1 %s")
+		logger.Debugf("Incorrect number of arguments. Expecting 1 args")
 	}
 
 	objUser := &User{}
@@ -33,7 +33,7 @@ func createUser(stub shim.ChaincodeStubInterface, args []string) cycoreutils.Res
 		return cycoreutils.ConstructResponse("SASTCONV002E", (errors.Wrapf(err, "Failed to convert arguments to a User object")).Error(), nil)
 	}
 
-	objUser.DocType = "USER"
+	objUser.docType = "USER"
 
 	collectionName := ""
 
@@ -56,7 +56,7 @@ func createUser(stub shim.ChaincodeStubInterface, args []string) cycoreutils.Res
 // getUserDetails - Get User Details by User ID
 // ======================================================================================
 func getUserDetails(stub shim.ChaincodeStubInterface, args []string) cycoreutils.Response {
-	logger.Debug("Arguments for getUserDetails : %s", args[0])
+	logger.Debug("Arguments for getUserDetails : ${args[0]}")
 
 	collectionName := ""
 

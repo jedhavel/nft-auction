@@ -13,7 +13,7 @@ package main
 // The json tags just tell the reader how to name the json fields //
 type User struct {
 	UserID    string `json:"userId,required"`
-	DocType   string `json:"docType"` // Type = USER
+	docType   string `json:"docType"` // Type = USER
 	Name      string `json:"name,required"`
 	Password  string `json:"password,required"`
 	UserType  string `json:"userType,required"` // Auction House (AH), Bank (BK), Buyer or Seller (TR), Shipper (SH), Appraiser (AP)
@@ -25,7 +25,7 @@ type User struct {
 }
 type itemobject struct {
 	ItemID            string `json:"itemID,required"`
-	DocType           string `json:"docType"`
+	docType           string `json:"docType"`
 	ItemDesc          string `json:"itemDescription"`
 	ItemDetail        string `json:"itemDetail"` // Could included details such as who created the Art work if item is a Painting
 	NumberOfCopies    string `json:"numberOfCopies"`
@@ -36,8 +36,8 @@ type itemobject struct {
 	ItemHashSignature string `json:"itemHashSignature"` // Signed version of ItemHash by the item creator
 	ItemMedia         string `json:"itemMedia"`
 	ItemSize          string `json:"itemSize"`
-	ItemImageName     string `json:"itemImageName"` // Item Subject + Extension
-	ItemImageType     string `json:"itemImageType"` // should be used to regenerate the appropriate image type
+	itemImageName     string `json:"itemImageName"` // Item Subject + Extension
+	itemImageType     string `json:"itemImageType"` // should be used to regenerate the appropriate image type
 	TimeStamp         string `json:"timeStamp"`     // This is the time stamp
 	ObjectCat         string `json:"objectCat"`     // ART, MUSIC et cetra
 }
@@ -49,10 +49,10 @@ type itemobject struct {
 // ======================================================================================
 type AuctionRequest struct {
 	AuctionID      string `json:"auctionID"`
-	DocType        string `json:"docType"` // AUCREQ
+	docType        string `json:"docType"` // AUCREQ
 	NftId          string `json:"nftId"`
-	ItemImage      string `json:"itemImage"`
-	ItemImageName  string `json:"itemImageName"`  // Item Subject + Extension
+	itemImage      string `json:"itemImage"`
+	itemImageName  string `json:"itemImageName"`  // Item Subject + Extension
 	AESKey         string `json:"aesKey"`         // AES Key of the Item supplied by Seller. This is used to validate ownership
 	AuctionHouseID string `json:"auctionHouseID"` // ID of the Auction House managing the auction
 	SellerID       string `json:"sellerID"`       // ID Of Seller - to verified against the Item CurrentOwnerId
@@ -69,7 +69,7 @@ type AuctionRequest struct {
 // ======================================================================================
 type OpenAuctionRequest struct {
 	AuctionRequestID     string `json:"auctionRequestID"`
-	DocType              string `json:"docType"` // AUCOPEN
+	docType              string `json:"docType"` // AUCOPEN
 	Duration             string `json:"duration"`
 	AuctionStartDateTime string `json:"auctionStartDateTime"` // The transaction Date and Time
 }

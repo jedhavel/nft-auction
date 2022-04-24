@@ -37,7 +37,7 @@ func recordItemObject(stub shim.ChaincodeStubInterface, args []string) cycoreuti
 		return cycoreutils.ConstructResponse("SASTCONV002E", (errors.Wrapf(err, "Failed to convert arg[1] to NFT object")).Error(), nil)
 	}
 
-	ItemObject.DocType = "ARTINV"
+	ItemObject.docType = "ARTINV"
 
 	// default number of nfts to be minted based on this item if not provided in the parameter
 	if ItemObject.NumberOfCopies == "" {
@@ -45,11 +45,11 @@ func recordItemObject(stub shim.ChaincodeStubInterface, args []string) cycoreuti
 	}
 	// Query and Retrieve the Full recordItemObject
 	keys := []string{ItemObject.ItemID}
-	logger.Debug("Keys for ItemObject %s: ", keys)
+	//logger.Debug("Keys for ItemObject %s: ${keys}")
 
 	collectionName = ""
 
-	Avalbytes, err = cycoreutils.QueryObject(stub, ItemObject.DocType, keys, collectionName)
+	Avalbytes, err = cycoreutils.QueryObject(stub, ItemObject.docType, keys, collectionName)
 
 	if err != nil {
 		return cycoreutils.ConstructResponse("SASTQRY003E", (errors.Wrapf(err, "Failed to query Item object")).Error(), nil)
@@ -61,7 +61,7 @@ func recordItemObject(stub shim.ChaincodeStubInterface, args []string) cycoreuti
 
 	ItemObjectBytes, _ := cycoreutils.ObjecttoJSON(ItemObject)
 
-	err = cycoreutils.UpdateObject(stub, ItemObject.DocType, keys, ItemObjectBytes, collectionName)
+	err = cycoreutils.UpdateObject(stub, ItemObject.docType, keys, ItemObjectBytes, collectionName)
 
 	if err != nil {
 		logger.Errorf("recordItemObject() : Error inserting ItemObject object into LedgerState %s", err)
@@ -101,7 +101,7 @@ func queryItemObject(stub shim.ChaincodeStubInterface, args []string) cycoreutil
 		return cycoreutils.ConstructResponse("SUSRPARM001E", fmt.Sprintf("Expecting ItemObject ID}. Received %d arguments", len(args)), nil)
 	}
 
-	ItemObject.DocType = "ARTINV"
+	ItemObject.docType = "ARTINV"
 
 	err = cycoreutils.JSONtoObject([]byte(args[0]), ItemObject)
 	if err != nil {
@@ -114,7 +114,7 @@ func queryItemObject(stub shim.ChaincodeStubInterface, args []string) cycoreutil
 
 	collectionName = ""
 
-	Avalbytes, err = cycoreutils.QueryObject(stub, ItemObject.DocType, keys, collectionName)
+	Avalbytes, err = cycoreutils.QueryObject(stub, ItemObject.docType, keys, collectionName)
 
 	if err != nil {
 		cycoreutils.ConstructResponse("SASTQRY003E", (errors.Wrapf(err, "Failed to query Item object")).Error(), nil)
@@ -177,7 +177,7 @@ func createNftId(itemCpyNum, itemID string) string {
 func deleteItemObject(stub shim.ChaincodeStubInterface, args []string) cycoreutils.Response {
 
 	var err error
-	DocType := "ItemObject"
+	docType := "ItemObject"
 	var collectionName string
 	var ItemObject = &itemobject{}
 
@@ -198,7 +198,7 @@ func deleteItemObject(stub shim.ChaincodeStubInterface, args []string) cycoreuti
 	keys := []string{ItemObject.ItemID}
 	logger.Info("Keys for ItemObject : ", keys)
 
-	err = cycoreutils.DeleteObject(stub, DocType, keys, collectionName)
+	err = cycoreutils.DeleteObject(stub, docType, keys, collectionName)
 	if err != nil {
 		return cycoreutils.ConstructResponse("SASTDEL012E", (errors.Wrapf(err, "Failed to delete ItemObject object")).Error(), nil)
 	}
@@ -254,14 +254,14 @@ func updateItemObject(stub shim.ChaincodeStubInterface, args []string) cycoreuti
 	if err != nil {
 		return cycoreutils.ConstructResponse("SASTCONV002E", (errors.Wrapf(err, "Failed to convert arg[0] to ItemObject object")).Error(), nil)
 	}
-	ItemObject.DocType = "ItemObject"
+	ItemObject.docType = "ItemObject"
 	// Query and Retrieve the Full updateItemObject
 	keys := []string{ItemObject.ItemID}
 	logger.Info("Keys for ItemObject : ", keys)
 
 	collectionName = ""
 
-	Avalbytes, err = cycoreutils.QueryObject(stub, ItemObject.DocType, keys, collectionName)
+	Avalbytes, err = cycoreutils.QueryObject(stub, ItemObject.docType, keys, collectionName)
 
 	if err != nil {
 		return cycoreutils.ConstructResponse("SASTQRY003E", (errors.Wrapf(err, "Failed to query ItemObject object")).Error(), nil)
@@ -273,7 +273,7 @@ func updateItemObject(stub shim.ChaincodeStubInterface, args []string) cycoreuti
 
 	ItemObjectBytes, _ := cycoreutils.ObjecttoJSON(ItemObject)
 
-	err = cycoreutils.UpdateObject(stub, ItemObject.DocType, keys, ItemObjectBytes, collectionName)
+	err = cycoreutils.UpdateObject(stub, ItemObject.docType, keys, ItemObjectBytes, collectionName)
 
 	if err != nil {
 		logger.Errorf("updateItemObject() : Error updating ItemObject object into LedgerState %s", err)

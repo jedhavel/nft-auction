@@ -63,7 +63,29 @@ func getListOfOpenAucsByAH(stub shim.ChaincodeStubInterface, args []string) cyco
 // verifyIfNftIsOnAuction - Checks if an NFT is already on Auction
 // ======================================================================================
 func verifyIfNftIsOnAuction(stub shim.ChaincodeStubInterface, nftId string) (bool, error) {
+	// get all `AuctionRequests` with status `open` or `init` and nftId
 	queryString := fmt.Sprintf("{\"selector\":{\"docType\": \"%s\",\"$or\": [{ \"status\": \"%s\" },{ \"status\": \"%s\" }],\"nftId\": \"%s\"}}}", AUCREQ, OPEN, INIT, nftId)
+	jsonRows, err := getAuctionsList(stub, queryString)
+	if err != nil {
+		return false, err
+	}
+
+	tlist := make([]AuctionRequest, len(jsonRows))
+	err = json.Unmarshal([]byte(jsonRows), &tlist)
+	if err != nil {
+		return false, err
+	}
+
+	if len(tlist) > 0 {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func verifyIfNftIsOnAuctionByUser(stub shim.ChaincodeStubInterface, nftId string, userId string) (bool, error) {
+	// get all `AuctionRequests` with status `open` or `init` and nftId
+	queryString := fmt.Sprintf("{\"selector\":{\"docType\": \"%s\",\"$or\": [{\"status\": \"%s\"},{\"status\": \"%s\"}],\"$or\": [{\"nftId\": \"%s\"},{\"sellerID\": \"%s\"}]}}}", AUCREQ, OPEN, INIT, nftId, userId)
 	jsonRows, err := getAuctionsList(stub, queryString)
 	if err != nil {
 		return false, err
@@ -87,7 +109,7 @@ func verifyIfNftIsOnAuction(stub shim.ChaincodeStubInterface, nftId string) (boo
 // will create an auction request  and specify a auction house.
 // ======================================================================================
 func createAuctionRequest(stub shim.ChaincodeStubInterface, args []string) cycoreutils.Response {
-	logger.Info("Arguments for createAuctionRequest : %s", args[0])
+	logger.Info("Arguments for createAuctionRequest : ${args[0]}")
 
 	AuctionRequest := &AuctionRequest{}
 	err := cycoreutils.JSONtoObject([]byte(args[0]), AuctionRequest)
@@ -139,8 +161,8 @@ func createAuctionRequest(stub shim.ChaincodeStubInterface, args []string) cycor
 		return cycoreutils.ConstructResponse("SASTCONV002E", (errors.Wrapf(err, "Auction Request object unmarshalling failed")).Error(), nil)
 	}
 
-	AuctionRequest.ItemImage = nftObject.itemImage
-	AuctionRequest.ItemImageName = Item.ItemImageName
+	AuctionRequest.itemImage = nftObject.itemImage
+	AuctionRequest.itemImageName = Item.itemImageName
 	// Check if nft is already on auction
 	isNftOnAuction, err := verifyIfNftIsOnAuction(stub, AuctionRequest.NftId)
 	if err != nil {
@@ -171,7 +193,7 @@ func createAuctionRequest(stub shim.ChaincodeStubInterface, args []string) cycor
 	// TODO - Add validation to check if the Auction House user is of type Auction House(AH)
 
 	// Check if item ownership is valid.
-	sellerIndex, err := validateNftOwnership(stub, AuctionRequest.NftId, AuctionRequest.SellerID, AuctionRequest.AESKey)
+	_, err = validateNftOwnership(stub, AuctionRequest.NftId, AuctionRequest.SellerID, AuctionRequest.AESKey)
 	if err != nil {
 		return cycoreutils.ConstructResponse("SASTQRY003E", (errors.Wrapf(err, "Operation Failed")).Error(), nil)
 	}
@@ -203,7 +225,7 @@ func createAuctionRequest(stub shim.ChaincodeStubInterface, args []string) cycor
 // openAuction - Open an Auction for Bids
 // ======================================================================================
 func openAuction(stub shim.ChaincodeStubInterface, args []string) cycoreutils.Response {
-	logger.Info("Arguments for openAuction : %s", args[0])
+	logger.Info("Arguments for openAuction : ${args[0]}")
 
 	openAuctionRequest := &OpenAuctionRequest{}
 	err := cycoreutils.JSONtoObject([]byte(args[0]), openAuctionRequest)
@@ -266,7 +288,7 @@ func openAuction(stub shim.ChaincodeStubInterface, args []string) cycoreutils.Re
 // getAuctionByID - Get Auction Details By ID
 // ======================================================================================
 func getAuctionByID(stub shim.ChaincodeStubInterface, args []string) cycoreutils.Response {
-	logger.Info("Arguments for getAuctionByID : %s", args[0])
+	logger.Info("Arguments for getAuctionByID : ${args[0]}")
 
 	collectionName := ""
 	// Check if Auction Request exists
@@ -284,7 +306,7 @@ func getAuctionByID(stub shim.ChaincodeStubInterface, args []string) cycoreutils
 // closeAuction - Closes the Auction
 // ================================================================================
 func closeAuction(stub shim.ChaincodeStubInterface, args []string) cycoreutils.Response {
-	logger.Info("Arguments for closeAuction : %s", args[0])
+	logger.Info("Arguments for closeAuction : ${args[0]}")
 
 	closeAuctionRequest := &AuctionRequest{}
 	err := cycoreutils.JSONtoObject([]byte(args[0]), closeAuctionRequest)
@@ -343,10 +365,10 @@ func closeAuction(stub shim.ChaincodeStubInterface, args []string) cycoreutils.R
 	if highestBid.DocType != "" {
 		TransferNft := TransferNft{}
 		TransferNft.NftId = AuctionRequest.NftId
-		TransferNft.ItemImage = AuctionRequest.ItemImage
+		TransferNft.itemImage = AuctionRequest.itemImage
 		TransferNft.SenderAESKey = AuctionRequest.AESKey
-		TransferNft.SenderID = AuctionRequest.SellerID
-		TransferNft.Transferee = highestBid.BuyerID
+		TransferNft.sender = AuctionRequest.SellerID
+		TransferNft.receiver = highestBid.BuyerID
 		TransferNft.ItemPrice = highestBid.BidPrice
 		// Convert TransferNft to JSON
 		transferItemBytes, err := cycoreutils.ObjecttoJSON(TransferNft) // Converting the transfer item request struct to []byte array
@@ -374,7 +396,7 @@ func closeAuction(stub shim.ChaincodeStubInterface, args []string) cycoreutils.R
 // Result set is built and returned as a byte array containing the JSON results.
 // ================================================================================
 func getAuctionsList(stub shim.ChaincodeStubInterface, queryString string) ([]byte, error) {
-	logger.Debug("getAuctionsList() queryString: %s\n", queryString)
+	logger.Debug("getAuctionsList() queryString: ${queryString}")
 
 	resultsIterator, err := stub.GetQueryResult(queryString)
 	if err != nil {
@@ -398,7 +420,7 @@ func getAuctionsList(stub shim.ChaincodeStubInterface, queryString string) ([]by
 			return nil, fmt.Errorf(errorMsg)
 		}
 		logger.Debug("getAuctionsList() :  Value : ", ar)
-		ar.ItemImage = ""
+		ar.itemImage = ""
 		tlist = append(tlist, ar)
 	}
 
@@ -443,7 +465,7 @@ func returnNftToOwner(stub shim.ChaincodeStubInterface, nftId string) error {
 	}
 
 	// reset the status of the token
-	nft.NftStatus = INITIAL
+	nft.nftStatus = INITIAL
 
 	NftObjectBytes, _ := cycoreutils.ObjecttoJSON(nft)
 	err = cycoreutils.UpdateObject(stub, NFT, []string{nftId}, NftObjectBytes, collectionName)
